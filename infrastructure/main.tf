@@ -7,11 +7,13 @@ resource "random_id" "bucket_id" {
 }
 
 resource "aws_s3_bucket" "log_storage" {
-  bucket = "aws-cloud-guardian-logs-${random_id.bucket_id.hex}"
+  bucket        = "aws-cloud-guardian-logs-${random_id.bucket_id.hex}"
+  force_destroy = true
 }
 
 resource "aws_s3_bucket" "lambda_code_bucket" {
-  bucket = "aws-cloud-guardian-code-${random_id.bucket_id.hex}"
+  bucket        = "aws-cloud-guardian-code-${random_id.bucket_id.hex}"
+  force_destroy = true
 }
 
 resource "aws_s3_object" "lambda_code" {
@@ -41,12 +43,18 @@ resource "aws_iam_role_policy_attachment" "lambda_logs" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
+resource "aws_cloudwatch_log_group" "lambda_logs" {
+  name              = "/aws/lambda/aws-cloud-guardian-processor"
+  retention_in_days = 7
+}
+
 resource "aws_lambda_function" "processor" {
   function_name = "aws-cloud-guardian-processor"
   role          = aws_iam_role.lambda_role.arn
   handler       = "processor.lambda_handler"
   runtime       = "python3.11"
   timeout       = 30
+  memory_size   = 256
 
   s3_bucket        = aws_s3_bucket.lambda_code_bucket.id
   s3_key           = aws_s3_object.lambda_code.key
@@ -54,10 +62,14 @@ resource "aws_lambda_function" "processor" {
 
   environment {
     variables = {
-      GEMINI_API_KEY = ""
-      WEBHOOK_URL    = "${aws_apigatewayv2_api.webhook_api.api_endpoint}/webhook"
+      WEBHOOK_URL = "${aws_apigatewayv2_api.webhook_api.api_endpoint}/webhook"
     }
   }
+
+  depends_on = [
+    aws_iam_role_policy_attachment.lambda_logs,
+    aws_cloudwatch_log_group.lambda_logs
+  ]
 }
 
 resource "aws_apigatewayv2_api" "webhook_api" {
@@ -93,5 +105,6 @@ resource "aws_lambda_permission" "allow_apigateway" {
 }
 
 output "webhook_url" {
-  value = "${aws_apigatewayv2_api.webhook_api.api_endpoint}/webhook"
+  description = "URL pública do webhook HTTP via API Gateway"
+  value       = "${aws_apigatewayv2_api.webhook_api.api_endpoint}/webhook"
 }
