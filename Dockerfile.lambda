@@ -1,0 +1,7 @@
+FROM public.ecr.aws/sam/build-python3.11:latest
+WORKDIR /var/task
+COPY src/lambda_functions/processor.py .
+# Instala as dependências dentro do ambiente Linux da Lambda
+RUN pip install google-generativeai -t .
+# Cria o zip final
+RUN zip -r /var/task/lambda_function.zip .

@@ -1,0 +1,56 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual env
+venv/
+.venv/
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.backup
+.terraform.lock.hcl
+
+# Environment
+.env
+.env.*
+
+# Build artifacts
+*.zip
+*.so
+*.dll
+*.dylib
+*.exe
+*.pth
+
+# Python dependencies accidentally installed in root
+google*
+grpc*
+charset_normalizer/
+urllib3/
+certifi/
+idna/
+requests/
+pyasn1*
+proto/
+httplib2/
+apiclient/
+googleapiclient/
+cryptography/
+cffi/
+pydantic*
+annotated_types/
+typing_extensions.py
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# Temp
+response.json
